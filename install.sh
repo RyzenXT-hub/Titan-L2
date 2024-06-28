@@ -11,11 +11,11 @@ echo "Disk Space" $(df -B 1G --total | awk '/total/ {print $2}' | tail -n 1) "GB
 echo "--------------------------------------------------------------------------"
 
 echo "--------------------------- BASH SHELL TITAN ---------------------------"
-# Lấy giá trị hash từ terminal
+# Get hash value from terminal
 echo "Enter Your Identity code: "
 read hash_value
 
-# Kiểm tra nếu hash_value là chuỗi rỗng (người dùng chỉ nhấn Enter) thì dừng chương trình
+# Check if hash_value is an empty string (the user just presses Enter), then stop the program
 if [ -z "$hash_value" ]; then
     echo "No value has been entered. Stop the program."
     exit 1
@@ -27,8 +27,8 @@ cpu_core=${cpu_core:-1}
 read -p "Enter RAM (default 2 GB): " memory_size
 memory_size=${memory_size:-2}
 
-read -p "Enter StorageGB (default 72 GB): " storage_size
-storage_size=${storage_size:-72}
+read -p "Enter StorageGB (default 50 GB): " storage_size
+storage_size=${storage_size:-50}
 
 service_content="
 [Unit]
@@ -58,13 +58,13 @@ sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
 
 rm titan-edge_v0.1.19_linux_amd64.tar.gz
 
-# Định nghĩa nội dung cần thêm
+# Definition of content to add
 content="
 export PATH=\$PATH:/usr/local/titan
 export LD_LIBRARY_PATH=\$LD_LIZBRARY_PATH:/usr/lib
 "
 
-# Kiểm tra nếu file ~/.bash_profile chưa tồn tại thì tạo mới, nếu đã tồn tại thì ghi thêm
+# Check if the file ~/.bash_profile does not exist, then create a new one, if it already exists, add it
 if [ ! -f ~/.bash_profile ]; then
   echo "$content" > ~/.bash_profile
 else
@@ -73,27 +73,27 @@ fi
 
 echo "Export PATH ~/.bash_profile"
 
-# Chạy titan-edge daemon trong nền
+# Run titan-edge daemon in the background
 (titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0 &) &
 daemon_pid=$!
 
 echo "PID of titan-edge daemon: $daemon_pid"
 
-# Chờ 10 giây để đảm bảo rằng daemon đã khởi động thành công
+# Wait 10 seconds to ensure that the daemon has started successfully
 sleep 15
 
-# Chạy titan-edge bind trong nền
+# Run titan-edge bind in the background
 (titan-edge bind --hash="$hash_value" https://api-test1.container1.titannet.io/api/v2/device/binding &) &
 bind_pid=$!
 
 echo "PID of titan-edge bind: $bind_pid"
 
-# Chờ cho quá trình bind kết thúc
+# Wait for the binding process to finish
 wait $bind_pid
 
 sleep 15
 
-# Tiến hành các cài đặt khác
+# Proceed with other settings
 
 config_file="/root/.titanedge/config.toml"
 if [ -f "$config_file" ]; then
@@ -109,16 +109,16 @@ fi
 
 echo "$service_content" | sudo tee /etc/systemd/system/titand.service > /dev/null
 
-# Dừng các tiến trình liên quan đến titan-edge
+# Stop processes related to titan-edge
 pkill titan-edge
 
-# Cập nhật systemd
+# Update systemd
 sudo systemctl daemon-reload
 
-# Kích hoạt và khởi động titand.service
+# Enable and start titand.service
 sudo systemctl enable titand.service
 sudo systemctl start titand.service
 
 sleep 8
-# Hiển thị thông tin và cấu hình của titan-edge
+# Displays information and configuration of titan-edge
 sudo systemctl status titand.service && titan-edge config show && titan-edge info
