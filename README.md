@@ -14,3 +14,4 @@ systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/ti
 ------------
 
 - Contact Telegram : https://t.me/Ryzen_XT
+- Reff Link : https://test1.titannet.io/intiveRegister?code=NDKWgo
