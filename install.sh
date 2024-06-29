@@ -52,11 +52,23 @@ sudo apt-get install -y nano
 wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
 sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local
-
-sudo mv /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 /usr/local/titan
-sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
-
 rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
+
+# Ensure the new installation is moved to the correct location
+if [ -d "/usr/local/titan-l2edge_v0.1.19_patch_linux_amd64" ]; then
+    sudo mv /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 /usr/local/titan
+else
+    echo "Error: Directory /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 does not exist."
+    exit 1
+fi
+
+# Copy necessary files
+if [ -f "/usr/local/titan/libgoworkerd.so" ]; then
+    sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
+else
+    echo "Error: File /usr/local/titan/libgoworkerd.so does not exist."
+    exit 1
+fi
 
 # Definition of content to add
 content="
@@ -73,13 +85,16 @@ fi
 
 echo "Export PATH ~/.bash_profile"
 
+# Source the .bash_profile to update the current shell environment
+source ~/.bash_profile
+
 # Run titan-edge daemon in the background
 (titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0 &) &
 daemon_pid=$!
 
 echo "PID of titan-edge daemon: $daemon_pid"
 
-# Wait 10 seconds to ensure that the daemon has started successfully
+# Wait 15 seconds to ensure that the daemon has started successfully
 sleep 15
 
 # Run titan-edge bind in the background
@@ -122,3 +137,5 @@ sudo systemctl start titand.service
 sleep 8
 # Displays information and configuration of titan-edge
 sudo systemctl status titand.service && titan-edge config show && titan-edge info
+
+echo "################ INSTALLATION SUCCESFULLY ################"
