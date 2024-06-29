@@ -52,7 +52,7 @@ StartLimitIntervalSec=0
 
 [Service]
 User=root
-ExecStart=/usr/local/titan/titan-edge daemon start
+ExecStart=/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64/titan-edge daemon start
 Restart=always
 RestartSec=15
 
