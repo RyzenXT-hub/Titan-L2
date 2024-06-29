@@ -172,7 +172,7 @@ sudo systemctl start titand.service
 sleep 8
 # Displays information and configuration of titan-edge
 echo -e "\e[1;96m"
-sudo systemctl status titand.service && titan-edge config show && titan-edge info
+timeout 2  sudo systemctl status titand.service && titan-edge config show && titan-edge info
 echo -e "\e[0m"
 
 echo -e "\e[1;94m###################### Installation completed successfully ######################\e[0m"
