@@ -13,7 +13,7 @@ titan-edge config show && titan-edge info
 ```
 - If errors, delete folder `.titanedge` and reinstall
 ```
-systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan
+systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan && rm ./install.sh
 ```
 
 
