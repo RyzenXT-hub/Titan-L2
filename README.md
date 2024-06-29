@@ -11,6 +11,11 @@ titan-edge config show && titan-edge info
 ```
 systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan
 ```
+- Update L2 node 
+```
+wget https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/update_titan.sh
+chmod +x update_titan.sh
+./update_titan.sh
 ------------
 
 - Contact Telegram : https://t.me/Ryzen_XT
