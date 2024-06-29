@@ -48,19 +48,23 @@ WantedBy=multi-user.target
 sudo apt-get update
 sudo apt-get install -y nano
 
+# Download and install the main package
 wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-edge_v0.1.19_linux_amd64.tar.gz
 
 sudo tar -xf titan-edge_v0.1.19_linux_amd64.tar.gz -C /usr/local
-
 sudo mv /usr/local/titan-edge_v0.1.19_linux_amd64 /usr/local/titan
 sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
-
 rm titan-edge_v0.1.19_linux_amd64.tar.gz
+
+# Download and install the patch
+wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
+sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local/titan
+rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
 # Definition of content to add
 content="
 export PATH=\$PATH:/usr/local/titan
-export LD_LIBRARY_PATH=\$LD_LIZBRARY_PATH:/usr/lib
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/lib
 "
 
 # Check if the file ~/.bash_profile does not exist, then create a new one, if it already exists, add it
