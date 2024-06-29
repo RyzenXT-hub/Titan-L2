@@ -17,6 +17,7 @@ wget https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/update_titan.sh
 chmod +x update_titan.sh
 ./update_titan.sh
 ------------
+```
 
 - Contact Telegram : https://t.me/Ryzen_XT
 - Reff Link : https://test1.titannet.io/intiveRegister?code=NDKWgo
