@@ -1,5 +1,5 @@
 # Bash Shell Auto Install Titan Node L2 - Cassini Testnet on Ubuntu 22.04+
-- Install (version 0.1.19+git.f70fbb7+api1.0.0 ) Bug Fixed Patch  29.06.24 
+- Install (version 0.1.19+git.89e53b6+api1.0.0) Bug Fixed Patch  29.06.24 
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/install.sh && chmod u+x install.sh && ./install.sh
 ```
