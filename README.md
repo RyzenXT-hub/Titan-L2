@@ -1,5 +1,5 @@
 # Bash Shell Auto Install Titan Node L2 - Cassini Testnet on Ubuntu 22.04+
-- Install (version v0.1.19)
+- Install (version v0.1.19) Update Patch 29.06.24 
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/install.sh && chmod u+x install.sh && ./install.sh
 ```
@@ -13,11 +13,9 @@ systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/ti
 ```
 - Update L2 node 
 ```
-wget https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/update_titan.sh
-chmod +x update_titan.sh
-./update_titan.sh
-------------
+wget https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/update_titan.sh && chmod +x update_titan.sh && ./update_titan.sh
 ```
+
 
 - Contact Telegram : https://t.me/Ryzen_XT
 - Reff Link : https://test1.titannet.io/intiveRegister?code=NDKWgo
