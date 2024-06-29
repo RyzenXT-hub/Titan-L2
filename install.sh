@@ -54,11 +54,17 @@ wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-
 sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local
 rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
-# Ensure the new installation is moved to the correct location
+# List contents of /usr/local to check for extracted files
+echo "Contents of /usr/local after extraction:"
+ls /usr/local
+
+# Check if the expected directory exists
 if [ -d "/usr/local/titan-l2edge_v0.1.19_patch_linux_amd64" ]; then
     sudo mv /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 /usr/local/titan
+elif [ -d "/usr/local/titan" ]; then
+    echo "Directory /usr/local/titan already exists."
 else
-    echo "Error: Directory /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 does not exist."
+    echo "Error: Expected directory does not exist after extraction."
     exit 1
 fi
 
