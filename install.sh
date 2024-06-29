@@ -1,11 +1,15 @@
 #!/bin/bash
 
+# Set PATH and LD_LIBRARY_PATH
+export PATH=$PATH:/usr/local/titan
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
+
 # Function to display animated loading
 function show_loading {
     local pid=$1
     local delay=0.1
     local spinstr='|/-\'
-    echo -n "Installing... "
+    echo -ne "\e[1;33mInstalling...\e[0m "
     while ps -p $pid > /dev/null; do
         local temp=${spinstr#?}
         printf "[%c] " "$spinstr"
@@ -13,21 +17,16 @@ function show_loading {
         sleep $delay
         printf "\b\b\b\b\b\b"
     done
-    printf "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-    echo "Done!"
+    printf "\e[1;36mDone!\e[0m\n"
 }
 
-# Set PATH and LD_LIBRARY_PATH
-export PATH=$PATH:/usr/local/titan
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
-
-echo -e "\033[93m--------------------------- Configuration INFO ---------------------------\033[0m"
+echo -e "\e[1;93m--------------------------- Configuration INFO ---------------------------\e[0m"
 echo "CPU: " $(nproc --all) "vCPU"
 echo -n "RAM: " && free -h | awk '/Mem/ {sub(/Gi/, " GB", $2); print $2}'
 echo "Disk Space" $(df -B 1G --total | awk '/total/ {print $2}' | tail -n 1) "GB"
-echo -e "\033[93m--------------------------------------------------------------------------\033[0m"
+echo -e "\e[1;93m--------------------------------------------------------------------------\e[0m"
 
-echo -e "\033[93m--------------------------- BASH SHELL TITAN ---------------------------\033[0m"
+echo -e "\e[1;93m--------------------------- BASH SHELL TITAN ---------------------------\e[0m"
 # Get hash value from terminal
 echo "Enter Your Identity code: "
 read hash_value
@@ -67,27 +66,32 @@ sudo apt-get update
 sudo apt-get install -y nano
 
 # Download and install the patch package
-echo -e "\033[93mDownloading patch package...\033[0m"
-wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
+echo -e "\e[1;93mDownloading patch package...\e[0m"
+wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz > /dev/null 2>&1 &
+download_pid=$!
+show_loading $download_pid
 
-sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local
-rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
+sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local > /dev/null 2>&1 &
+install_pid=$!
+show_loading $install_pid
+
+rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz > /dev/null 2>&1
 
 # Rename the extracted directory correctly
 if [ -d "/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64" ]; then
-    echo -e "\033[93mMoving installation to the correct location...\033[0m"
+    echo -e "\e[1;93mMoving installation to the correct location...\e[0m"
     sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan
 else
-    echo -e "\033[91mError: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist.\033[0m"
+    echo -e "\e[91mError: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist.\e[0m"
     exit 1
 fi
 
 # Copy necessary files
 if [ -f "/usr/local/titan/libgoworkerd.so" ]; then
-    echo -e "\033[93mCopying necessary files...\033[0m"
+    echo -e "\e[1;93mCopying necessary files...\e[0m"
     sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
 else
-    echo -e "\033[91mError: File /usr/local/titan/libgoworkerd.so does not exist.\033[0m"
+    echo -e "\e[91mError: File /usr/local/titan/libgoworkerd.so does not exist.\e[0m"
     exit 1
 fi
 
@@ -104,7 +108,7 @@ else
   echo "$content" >> ~/.bash_profile
 fi
 
-echo -e "\033[93mUpdating environment settings...\033[0m"
+echo -e "\e[1;93mUpdating environment settings...\e[0m"
 # Source the .bash_profile to update the current shell environment
 source ~/.bash_profile
 
@@ -146,29 +150,29 @@ if [ -f "$config_file" ]; then
     sed -i "s/#Cores = 1/Cores = $cpu_core/" "$config_file"
     echo "Config Cores CPU to: $cpu_core Core."
 else
-    echo -e "\033[91mError: Configuration file $config_file does not exist.\033[0m"
+    echo -e "\e[91mError: Configuration file $config_file does not exist.\e[0m"
 fi
 
-echo -e "\033[93mCreating systemd service...\033[0m"
+echo -e "\e[1;93mCreating systemd service...\e[0m"
 echo "$service_content" | sudo tee /etc/systemd/system/titand.service > /dev/null
 
 # Stop processes related to titan-edge
-echo -e "\033[93mStopping titan-edge processes...\033[0m"
+echo -e "\e[1;93mStopping titan-edge processes...\e[0m"
 pkill titan-edge
 
 # Update systemd
-echo -e "\033[93mReloading systemd...\033[0m"
+echo -e "\e[1;93mReloading systemd...\e[0m"
 sudo systemctl daemon-reload
 
 # Enable and start titand.service
-echo -e "\033[93mStarting titand.service...\033[0m"
+echo -e "\e[1;93mStarting titand.service...\e[0m"
 sudo systemctl enable titand.service
 sudo systemctl start titand.service
 
 sleep 8
 # Displays information and configuration of titan-edge
-echo -e "\033[96m"
+echo -e "\e[1;96m"
 sudo systemctl status titand.service && titan-edge config show && titan-edge info
-echo -e "\033[0m"
+echo -e "\e[0m"
 
-echo -e "\033[94m###################### Installation completed successfully ######################\033[0m"
+echo -e "\e[1;94m###################### Installation completed successfully ######################\e[0m"
