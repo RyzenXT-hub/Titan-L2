@@ -15,7 +15,12 @@ titan-edge config show && titan-edge info
 ```
 systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan && rm ./install.sh
 ```
-
+#What's New : 
+- Improved Error Handling
+- Animated Loading Feedback
+- Color-Coded Messages
+- Enhanced Environment Settings Update
+- Configuration and Service Management
 
 
 - Contact Telegram : https://t.me/Ryzen_XT
