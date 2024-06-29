@@ -1,37 +1,22 @@
 #!/bin/bash
+# Set PATH and LD_LIBRARY_PATH
+export PATH=$PATH:/usr/local/titan
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
 
-# Function to show loading animation in yellow
-show_loading() {
-    pid=$!
-    spin='-\|/'
-    i=0
-    while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) %4 ))
-        printf "\r\033[1;33m%s\033[0m" "${spin:$i:1}"
-        sleep .1
-    done
-    printf "\r"
-}
+echo "--------------------------- Configuration INFO ---------------------------"
+echo "CPU: " $(nproc --all) "vCPU"
+echo -n "RAM: " && free -h | awk '/Mem/ {sub(/Gi/, " GB", $2); print $2}'
+echo "Disk Space" $(df -B 1G --total | awk '/total/ {print $2}' | tail -n 1) "GB"
+echo "--------------------------------------------------------------------------"
 
-# Function to print success message in light blue
-print_success() {
-    printf "\033[1;34m%s\033[0m\n" "$1"
-}
-
-echo -e "\033[1;33m--------------------------- Configuration INFO ---------------------------\033[0m"
-echo -e "\033[1;33mCPU: $(nproc --all) vCPU\033[0m"
-echo -en "\033[1;33mRAM: " && free -h | awk '/Mem/ {sub(/Gi/, " GB", $2); print $2}'
-echo -e "\033[1;33mDisk Space $(df -B 1G --total | awk '/total/ {print $2}' | tail -n 1) GB\033[0m"
-echo -e "\033[1;33m--------------------------------------------------------------------------\033[0m"
-
-echo -e "\033[1;33m--------------------------- BASH SHELL TITAN ---------------------------\033[0m"
+echo "--------------------------- BASH SHELL TITAN ---------------------------"
 # Get hash value from terminal
-echo -e "\033[1;33mEnter Your Identity code: \033[0m"
+echo "Enter Your Identity code: "
 read hash_value
 
 # Check if hash_value is an empty string (the user just presses Enter), then stop the program
 if [ -z "$hash_value" ]; then
-    echo -e "\033[1;31mNo value has been entered. Stop the program.\033[0m"
+    echo "No value has been entered. Stop the program."
     exit 1
 fi
 
@@ -52,7 +37,7 @@ StartLimitIntervalSec=0
 
 [Service]
 User=root
-ExecStart=/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64/titan-edge daemon start
+ExecStart=/usr/local/titan/titan-edge daemon start
 Restart=always
 RestartSec=15
 
@@ -60,39 +45,28 @@ RestartSec=15
 WantedBy=multi-user.target
 "
 
-echo -e "\033[1;33mUpdating system packages...\033[0m"
-sudo apt-get update & show_loading
-print_success "System packages updated."
-
-echo -e "\033[1;33mInstalling nano...\033[0m"
-sudo apt-get install -y nano & show_loading
-print_success "Nano installed."
+sudo apt-get update
+sudo apt-get install -y nano
 
 # Download and install the patch package
-echo -e "\033[1;33mDownloading and installing the patch package...\033[0m"
-wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz & show_loading
-print_success "Patch package downloaded."
+wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
-sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local & show_loading
+sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local
 rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
 # Rename the extracted directory correctly
 if [ -d "/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64" ]; then
-    echo -e "\033[1;33mMoving the new installation to the correct location...\033[0m"
-    sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan & show_loading
-    print_success "Installation moved to /usr/local/titan."
+    sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan
 else
-    echo -e "\033[1;31mError: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist.\033[0m"
+    echo "Error: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist."
     exit 1
 fi
 
 # Copy necessary files
 if [ -f "/usr/local/titan/libgoworkerd.so" ]; then
-    echo -e "\033[1;33mCopying necessary files...\033[0m"
-    sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so & show_loading
-    print_success "Files copied successfully."
+    sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
 else
-    echo -e "\033[1;31mError: File /usr/local/titan/libgoworkerd.so does not exist.\033[0m"
+    echo "Error: File /usr/local/titan/libgoworkerd.so does not exist."
     exit 1
 fi
 
@@ -109,33 +83,25 @@ else
   echo "$content" >> ~/.bash_profile
 fi
 
-echo -e "\033[1;33mUpdating environment settings...\033[0m"
-source ~/.bash_profile & show_loading
-print_success "Environment settings updated."
+echo "Export PATH ~/.bash_profile"
 
-# Check if titan-edge command is accessible
-echo -e "\033[1;33mChecking titan-edge command...\033[0m"
-if ! command -v titan-edge &> /dev/null; then
-    echo -e "\033[1;31mError: titan-edge command not found.\033[0m"
-    exit 1
-fi
+# Source the .bash_profile to update the current shell environment
+source ~/.bash_profile
 
 # Run titan-edge daemon in the background
-echo -e "\033[1;33mStarting titan-edge daemon...\033[0m"
 (titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0 &) &
 daemon_pid=$!
-show_loading
-print_success "Daemon started. PID: $daemon_pid"
+
+echo "PID of titan-edge daemon: $daemon_pid"
 
 # Wait 15 seconds to ensure that the daemon has started successfully
 sleep 15
 
 # Run titan-edge bind in the background
-echo -e "\033[1;33mRunning titan-edge bind...\033[0m"
 (titan-edge bind --hash="$hash_value" https://api-test1.container1.titannet.io/api/v2/device/binding &) &
 bind_pid=$!
-show_loading
-print_success "Bind process started. PID: $bind_pid"
+
+echo "PID of titan-edge bind: $bind_pid"
 
 # Wait for the binding process to finish
 wait $bind_pid
@@ -146,46 +112,30 @@ sleep 15
 
 config_file="/root/.titanedge/config.toml"
 if [ -f "$config_file" ]; then
-    echo -e "\033[1;33mConfiguring titan-edge settings...\033[0m"
     sed -i "s/#StorageGB = 2/StorageGB = $storage_size/" "$config_file"
+    echo "Config StorageGB to: $storage_size GB."
     sed -i "s/#MemoryGB = 1/MemoryGB = $memory_size/" "$config_file"
+    echo "Config MemoryGB to: $memory_size GB."
     sed -i "s/#Cores = 1/Cores = $cpu_core/" "$config_file"
-    print_success "Configuration completed."
+    echo "Config Cores CPU to: $cpu_core Core."
 else
-    echo -e "\033[1;31mError: Configuration file $config_file does not exist.\033[0m"
+    echo "Error: Configuration file $config_file does not exist."
 fi
 
-echo -e "\033[1;33mCreating systemd service...\033[0m"
-echo "$service_content" | sudo tee /etc/systemd/system/titand.service > /dev/null & show_loading
-print_success "Systemd service created."
+echo "$service_content" | sudo tee /etc/systemd/system/titand.service > /dev/null
 
 # Stop processes related to titan-edge
-echo -e "\033[1;33mStopping titan-edge processes...\033[0m"
-pkill titan-edge & show_loading
-print_success "Processes stopped."
+pkill titan-edge
 
 # Update systemd
-echo -e "\033[1;33mReloading systemd...\033[0m"
-sudo systemctl daemon-reload & show_loading
-print_success "Systemd reloaded."
+sudo systemctl daemon-reload
 
 # Enable and start titand.service
-echo -e "\033[1;33mEnabling and starting titan service...\033[0m"
-sudo systemctl enable titand.service & show_loading
-sudo systemctl start titand.service & show_loading
-print_success "Service enabled and started."
+sudo systemctl enable titand.service
+sudo systemctl start titand.service
 
 sleep 8
 # Displays information and configuration of titan-edge
-echo -e "\033[1;34m---------------------------------------------------\033[0m"
-echo -e "\033[1;34mTitan-edge status:\033[0m"
-sudo systemctl status titand.service
-echo -e "\033[1;34m---------------------------------------------------\033[0m"
-echo -e "\033[1;34mCurrent titan-edge configuration:\033[0m"
-titan-edge config show
-echo -e "\033[1;34m---------------------------------------------------\033[0m"
-echo -e "\033[1;34mTitan-edge information:\033[0m"
-titan-edge info
-echo -e "\033[1;34m---------------------------------------------------\033[0m"
+sudo systemctl status titand.service && titan-edge config show && titan-edge info
 
-echo -e "\033[1;34mInstallation successfully completed.\033[0m"
+echo "###################### installation successfully ######################"
