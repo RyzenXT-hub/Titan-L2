@@ -7,7 +7,7 @@ show_loading() {
     i=0
     while kill -0 $pid 2>/dev/null; do
         i=$(( (i+1) %4 ))
-        printf "\r\033[0;33m%s\033[0m" "${spin:$i:1}"
+        printf "\r\033[1;33m%s\033[0m" "${spin:$i:1}"
         sleep .1
     done
     printf "\r"
@@ -71,7 +71,7 @@ print_success "Nano installed."
 # Download and install the patch package
 echo -e "\033[1;33mDownloading and installing the patch package...\033[0m"
 wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz & show_loading
-print_success "Patch package downloaded and installed."
+print_success "Patch package downloaded."
 
 sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local & show_loading
 rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
@@ -112,6 +112,13 @@ fi
 echo -e "\033[1;33mUpdating environment settings...\033[0m"
 source ~/.bash_profile & show_loading
 print_success "Environment settings updated."
+
+# Check if titan-edge command is accessible
+echo -e "\033[1;33mChecking titan-edge command...\033[0m"
+if ! command -v titan-edge &> /dev/null; then
+    echo -e "\033[1;31mError: titan-edge command not found.\033[0m"
+    exit 1
+fi
 
 # Run titan-edge daemon in the background
 echo -e "\033[1;33mStarting titan-edge daemon...\033[0m"
