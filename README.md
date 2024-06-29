@@ -22,6 +22,5 @@ systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/ti
 - Enhanced Environment Settings Update
 - Configuration and Service Management
 
+#Contact Telegram : https://t.me/Ryzen_XT 
 
-#Contact Telegram : https://t.me/Ryzen_XT
-#Reff Link : https://test1.titannet.io/intiveRegister?code=NDKWgo
