@@ -12,10 +12,20 @@ sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local
 rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
 
 # Move the new installation to the correct location
-sudo mv /usr/local/titan-l2edge_v0.1.19_patch_linux_amd64 /usr/local/titan
+if [ -d "/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64" ]; then
+    sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan
+else
+    echo "Error: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist."
+    exit 1
+fi
 
 # Copy necessary files
-sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
+if [ -f "/usr/local/titan/libgoworkerd.so" ]; then
+    sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so
+else
+    echo "Error: File /usr/local/titan/libgoworkerd.so does not exist."
+    exit 1
+fi
 
 # Add titan to PATH and LD_LIBRARY_PATH in .bash_profile
 content="
@@ -61,4 +71,4 @@ sudo systemctl restart titand.service
 sleep 8
 sudo systemctl status titand.service && titan-edge config show && titan-edge info
 
-echo "Pembaruan selesai."
+echo "########################## UPDATE COMPLETED ##########################"
