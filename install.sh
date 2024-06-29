@@ -138,4 +138,4 @@ sleep 8
 # Displays information and configuration of titan-edge
 sudo systemctl status titand.service && titan-edge config show && titan-edge info
 
-echo "################ INSTALLATION SUCCESFULLY ################"
+echo "###################### installation successfully ######################"
