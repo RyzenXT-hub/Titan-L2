@@ -101,7 +101,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
 titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0
 
 # Bind all nodes with the same hash value
-HASH_VALUE="75AA5F6F-3E03-48DC-A93D-2DC85A71A85B"
+HASH_VALUE="64D57164-87A0-4B01-BE38-9D6DD62555F0"
 for ((i=1; i<=5; i++))
 do
     titan-edge bind --hash=$HASH_VALUE https://api-test1.container1.titannet.io/api/v2/device/binding
