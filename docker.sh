@@ -31,15 +31,15 @@ curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-com
 chmod +x /usr/local/bin/docker-compose
 
 # Move to root directory
-cd /root
+cd /root || exit
 
 # Create fake storage directories and disk images for 5 nodes
 for i in {1..5}
 do
     echo "Creating fake storage for node$i..."
-    mkdir -p /path/to/fake_node$i
-    dd if=/dev/zero of=/path/to/fake_node$i/storage.img bs=1M seek=50000 count=0
-    mkfs.ext4 /path/to/fake_node$i/storage.img
+    mkdir -p /root/fake_node$i
+    dd if=/dev/zero of=/root/fake_node$i/storage.img bs=1M seek=12000000 count=0
+    mkfs.ext4 /root/fake_node$i/storage.img
 done
 
 # Create Dockerfile for Titan node
@@ -102,6 +102,9 @@ version: '3'
 services:
 EOF
 
+# Calculate size for each node
+node_size=2000000  # 2 TB in MB
+
 # Append services for each Titan node to docker-compose.yml
 for i in {1..5}
 do
@@ -122,7 +125,7 @@ EOF
     driver: local
     driver_opts:
       type: none
-      device: /path/to/fake_node$i
+      device: /root/fake_node$i
       o: bind
 EOF
 
