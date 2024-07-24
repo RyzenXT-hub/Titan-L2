@@ -38,7 +38,7 @@ for i in {1..5}
 do
     echo "Creating fake storage for node$i..."
     mkdir -p /root/fake_storage$i
-    dd if=/dev/zero of=/root/fake_storage$i/storage.img bs=1M seek=5000000 count=0
+    dd if=/dev/zero of=/root/fake_storage$i/storage.img bs=1M seek=20000000 count=0
     mkfs.ext4 /root/fake_storage$i/storage.img
 done
 
