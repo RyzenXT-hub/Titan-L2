@@ -27,17 +27,13 @@ apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # Install Docker Compose
 echo -e "\e[1;93mInstalling Docker Compose...\e[0m"
-curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
-
-# Pull Nezha (assuming it's needed, adjust this step accordingly)
-echo -e "\e[1;93mPulling Nezha...\e[0m"
-docker pull nezha123/titan-edge
 
 # Move to root directory
 cd /root || exit
 
-# Create fake storage directories and disk images for 5 nodes (each 5 TB)
+# Create fake storage directories and disk images for 5 nodes
 for i in {1..5}
 do
     echo "Creating fake storage for node$i..."
@@ -151,11 +147,11 @@ cat <<EOF > /etc/systemd/system/titan_nodes.service
 Description=Titan Nodes Docker Setup
 After=docker.service network-online.target
 Requires=docker.service
+Restart=always
+RestartSec=15
 
 [Service]
 Type=oneshot
-Restart=always
-RestartSec=15
 ExecStart=/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 WorkingDirectory=/root
 StandardOutput=journal
