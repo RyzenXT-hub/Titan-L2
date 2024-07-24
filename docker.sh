@@ -27,19 +27,23 @@ apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # Install Docker Compose
 echo -e "\e[1;93mInstalling Docker Compose...\e[0m"
-curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
+
+# Pull Nezha (assuming it's needed, adjust this step accordingly)
+echo -e "\e[1;93mPulling Nezha...\e[0m"
+docker pull nezha123/titan-edge
 
 # Move to root directory
 cd /root || exit
 
-# Create fake storage directories and disk images for 5 nodes
+# Create fake storage directories and disk images for 5 nodes (each 5 TB)
 for i in {1..5}
 do
     echo "Creating fake storage for node$i..."
-    mkdir -p /root/fake_node$i
-    dd if=/dev/zero of=/root/fake_node$i/storage.img bs=1M seek=12000000 count=0
-    mkfs.ext4 /root/fake_node$i/storage.img
+    mkdir -p /root/fake_storage$i
+    dd if=/dev/zero of=/root/fake_storage$i/storage.img bs=1M seek=5000000 count=0
+    mkfs.ext4 /root/fake_storage$i/storage.img
 done
 
 # Create Dockerfile for Titan node
@@ -102,9 +106,6 @@ version: '3'
 services:
 EOF
 
-# Calculate size for each node
-node_size=2000000  # 2 TB in MB
-
 # Append services for each Titan node to docker-compose.yml
 for i in {1..5}
 do
@@ -125,7 +126,7 @@ EOF
     driver: local
     driver_opts:
       type: none
-      device: /root/fake_node$i
+      device: /root/fake_storage$i
       o: bind
 EOF
 
@@ -153,6 +154,8 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
+Restart=always
+RestartSec=15
 ExecStart=/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 WorkingDirectory=/root
 StandardOutput=journal
