@@ -25,6 +25,10 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu fo
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
+# Pull Docker image nezha123/titan-edge (add this line)
+echo -e "\e[1;93mPulling Docker image nezha123/titan-edge...\e[0m"
+docker pull nezha123/titan-edge
+
 # Install Docker Compose
 echo -e "\e[1;93mInstalling Docker Compose...\e[0m"
 curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
@@ -33,7 +37,7 @@ chmod +x /usr/local/bin/docker-compose
 # Move to root directory
 cd /root || exit
 
-# Create fake storage directory and disk image for all nodes
+# Create fake storage directory and disk image
 echo "Creating fake storage..."
 mkdir -p /root/fake_storage
 dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0
@@ -52,9 +56,9 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables
-ENV TITAN_METADATAPATH /mnt/fake_storage
-ENV TITAN_ASSETSPATHS /mnt/fake_storage
+# Set environment variables (updated to recommended format)
+ENV TITAN_METADATAPATH=/mnt/fake_storage
+ENV TITAN_ASSETSPATHS=/mnt/fake_storage
 
 # Copy scripts and configuration files
 COPY start_node.sh /usr/local/bin/start_node.sh
@@ -82,8 +86,7 @@ titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rp
 
 # Bind all nodes with the same hash value
 HASH_VALUE="64D57164-87A0-4B01-BE38-9D6DD62555F0"
-for ((i=1; i<=5; i++))
-do
+for ((i=1; i<=5; i++)); do
     titan-edge bind --hash=$HASH_VALUE https://api-test1.container1.titannet.io/api/v2/device/binding
 done
 
@@ -99,14 +102,11 @@ version: '3'
 services:
 EOF
 
-# Append services for each Titan node to docker-compose.yml
-for i in {1..5}
-do
-    cat <<EOF >> docker-compose.yml
-  titan_node$i:
-    build:
-      context: .
-    container_name: titan_node$i
+# Append service for Titan node to docker-compose.yml
+cat <<EOF >> docker-compose.yml
+  titan_node1:
+    image: nezha123/titan-edge
+    container_name: titan_node1
     volumes:
       - node_storage:/mnt/fake_storage
     restart: always
@@ -120,32 +120,30 @@ volumes:
       o: bind
 EOF
 
-done
-
 # Show confirmation message
 echo -e "\e[1;93mConfiguration completed.\e[0m"
-echo "Starting Titan nodes..."
+echo "Starting Titan node..."
 
-# Build and start all Docker containers
+# Build and start Docker container
 /usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 
-# Wait for nodes to start
+# Wait for node to start
 sleep 30
 
-# Show status of Titan nodes
+# Show status of Titan node
 /usr/local/bin/docker-compose -f /root/docker-compose.yml ps
 
 # Create systemd service to run docker-compose on boot
-cat <<EOF > /etc/systemd/system/titan_nodes.service
+cat <<EOF > /etc/systemd/system/titan_node.service
 [Unit]
-Description=Titan Nodes Docker Setup
+Description=Titan Node Docker Container
 After=docker.service network-online.target
 Requires=docker.service
 Restart=always
 RestartSec=15
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 WorkingDirectory=/root
 StandardOutput=journal
@@ -158,10 +156,10 @@ EOF
 systemctl daemon-reload
 
 # Enable the service to start on boot
-systemctl enable titan_nodes.service
+systemctl enable titan_node.service
 
 # Start the service
-systemctl start titan_nodes.service
+systemctl start titan_node.service
 
 # End of script
 echo -e "\e[1;94m###################### Installation completed successfully ######################\e[0m"
