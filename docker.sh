@@ -16,39 +16,22 @@ function show_loading {
     printf "\e[1;36mDone!\e[0m\n"
 }
 
-# Update package index and install necessary packages
-echo "Updating package index..."
-apt-get update
+# Move to root directory
+cd /root
 
-echo "Installing prerequisites..."
+# Update package index and install necessary packages
+apt-get update
 apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
+    wget \
     gnupg-agent \
     software-properties-common
 
-# Add Docker's official GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# Add Docker repository with automatic 'yes' confirmation
+yes | add-apt-repository --yes "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 
-# Add Docker repository for Ubuntu Focal (20.04)
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-
-# Install Docker Engine
-echo "Installing Docker Engine..."
+# Install Docker CE
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
-
-# Verify Docker installation
-echo "Verifying Docker installation..."
-docker --version
-
-# Pull Titan Edge Docker image
-echo "Pulling Titan Edge Docker image..."
-docker pull nezha123/titan-edge
-
-# Move to root directory
-cd /root
 
 # Create fake storage directories and disk images for 5 nodes
 for i in {1..5}
@@ -113,6 +96,51 @@ EOF
 # Make start_node.sh executable
 chmod +x start_node.sh
 
+# Create docker-compose.yml
+cat <<'EOF' > docker-compose.yml
+version: '3'
+services:
+EOF
+
+# Append services for each Titan node to docker-compose.yml
+for i in {1..5}
+do
+    cat <<EOF >> docker-compose.yml
+  titan_node$i:
+    build:
+      context: .
+    container_name: titan_node$i
+    volumes:
+      - node${i}_storage:/mnt/fake_storage
+    restart: always
+
+volumes:
+EOF
+
+    cat <<EOF >> docker-compose.yml
+  node${i}_storage:
+    driver: local
+    driver_opts:
+      type: none
+      device: /path/to/fake_node$i
+      o: bind
+EOF
+
+done
+
+# Show confirmation message
+echo -e "\e[1;93mConfiguration completed.\e[0m"
+echo "Starting Titan nodes..."
+
+# Build and start all Docker containers
+docker-compose up -d
+
+# Wait for nodes to start
+sleep 30
+
+# Show status of Titan nodes
+docker-compose ps
+
 # Create systemd service to run setup_titan_nodes.sh on boot
 cat <<EOF > /etc/systemd/system/titan_nodes.service
 [Unit]
@@ -125,10 +153,6 @@ Type=oneshot
 ExecStart=/bin/bash /root/docker.sh
 WorkingDirectory=/root
 StandardOutput=journal
-
-# Restart on failure or reboot after 15 seconds
-Restart=always
-RestartSec=15
 
 [Install]
 WantedBy=multi-user.target
