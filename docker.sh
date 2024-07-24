@@ -133,13 +133,13 @@ echo -e "\e[1;93mConfiguration completed.\e[0m"
 echo "Starting Titan nodes..."
 
 # Build and start all Docker containers
-docker-compose up -d
+/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 
 # Wait for nodes to start
 sleep 30
 
 # Show status of Titan nodes
-docker-compose ps
+/usr/local/bin/docker-compose -f /root/docker-compose.yml ps
 
 # Create systemd service to run docker-compose on boot
 cat <<EOF > /etc/systemd/system/titan_nodes.service
