@@ -33,14 +33,11 @@ chmod +x /usr/local/bin/docker-compose
 # Move to root directory
 cd /root || exit
 
-# Create fake storage directories and disk images for 5 nodes
-for i in {1..5}
-do
-    echo "Creating fake storage for node$i..."
-    mkdir -p /root/fake_storage$i
-    dd if=/dev/zero of=/root/fake_storage$i/storage.img bs=1M seek=20000000 count=0
-    mkfs.ext4 /root/fake_storage$i/storage.img
-done
+# Create fake storage directory and disk image for all nodes
+echo "Creating fake storage..."
+mkdir -p /root/fake_storage
+dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0
+mkfs.ext4 /root/fake_storage/storage.img
 
 # Create Dockerfile for Titan node
 cat <<EOF > Dockerfile
@@ -111,18 +108,15 @@ do
       context: .
     container_name: titan_node$i
     volumes:
-      - node${i}_storage:/mnt/fake_storage
+      - node_storage:/mnt/fake_storage
     restart: always
 
 volumes:
-EOF
-
-    cat <<EOF >> docker-compose.yml
-  node${i}_storage:
+  node_storage:
     driver: local
     driver_opts:
       type: none
-      device: /root/fake_storage$i
+      device: /root/fake_storage
       o: bind
 EOF
 
