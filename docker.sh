@@ -60,6 +60,10 @@ RUN apt-get update && apt-get install -y \
 ENV TITAN_METADATAPATH /mnt/fake_storage
 ENV TITAN_ASSETSPATHS /mnt/fake_storage
 
+# Install Titan Edge binary
+COPY titan-edge /usr/bin/titan-edge
+RUN chmod +x /usr/bin/titan-edge
+
 # Copy scripts and configuration files
 COPY start_node.sh /usr/local/bin/start_node.sh
 RUN chmod +x /usr/local/bin/start_node.sh
