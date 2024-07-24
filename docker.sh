@@ -40,7 +40,7 @@ cd /root || exit
 # Create fake storage directory and disk image
 echo "Creating fake storage for Titan node..."
 mkdir -p /root/fake_storage
-dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0  # 10 TB in MB
+dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0
 mkfs.ext4 /root/fake_storage/storage.img
 
 # Create Dockerfile for Titan node
