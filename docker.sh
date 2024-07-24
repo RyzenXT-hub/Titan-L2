@@ -16,32 +16,22 @@ function show_loading {
     printf "\e[1;36mDone!\e[0m\n"
 }
 
-# Move to root directory
-cd /root
-
-# Update package index and install necessary packages
+# Install Docker
+echo -e "\e[1;93mInstalling Docker...\e[0m"
 apt-get update
-apt-get install -y \
-    wget \
-    gnupg-agent \
-    software-properties-common
-
-# Add Docker repository with automatic 'yes' confirmation
-echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" | tee /etc/apt/sources.list.d/docker.list
-
-# Import Docker GPG key
-wget -qO- https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-
-# Install Docker CE
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# Install docker-compose
-wget https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -O /usr/local/bin/docker-compose
+# Install Docker Compose
+echo -e "\e[1;93mInstalling Docker Compose...\e[0m"
+curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-# Update PATH to include /usr/local/bin
-export PATH=$PATH:/usr/local/bin
+# Move to root directory
+cd /root
 
 # Create fake storage directories and disk images for 5 nodes
 for i in {1..5}
@@ -151,7 +141,7 @@ sleep 30
 # Show status of Titan nodes
 docker-compose ps
 
-# Create systemd service to run setup_titan_nodes.sh on boot
+# Create systemd service to run docker-compose on boot
 cat <<EOF > /etc/systemd/system/titan_nodes.service
 [Unit]
 Description=Titan Nodes Docker Setup
@@ -160,7 +150,7 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /root/docker.sh
+ExecStart=/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 WorkingDirectory=/root
 StandardOutput=journal
 
