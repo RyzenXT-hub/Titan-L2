@@ -36,6 +36,10 @@ wget -qO- https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
+# Install docker-compose
+wget https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -O /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
 # Create fake storage directories and disk images for 5 nodes
 for i in {1..5}
 do
