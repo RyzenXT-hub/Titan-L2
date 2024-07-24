@@ -16,6 +16,37 @@ function show_loading {
     printf "\e[1;36mDone!\e[0m\n"
 }
 
+# Update package index and install necessary packages
+echo "Updating package index..."
+apt-get update
+
+echo "Installing prerequisites..."
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+
+# Add Docker's official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+# Add Docker repository for Ubuntu Focal (20.04)
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+
+# Install Docker Engine
+echo "Installing Docker Engine..."
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io
+
+# Verify Docker installation
+echo "Verifying Docker installation..."
+docker --version
+
+# Pull Titan Edge Docker image
+echo "Pulling Titan Edge Docker image..."
+docker pull nezha123/titan-edge
+
 # Move to root directory
 cd /root
 
@@ -82,14 +113,7 @@ EOF
 # Make start_node.sh executable
 chmod +x start_node.sh
 
-# Show confirmation message
-echo -e "\e[1;93mConfiguration completed.\e[0m"
-echo "Starting Titan nodes..."
-
-# Build Docker image and start containers using systemd service
-docker build -t titan-node .
-
-# Create systemd service to start Docker containers on boot
+# Create systemd service to run setup_titan_nodes.sh on boot
 cat <<EOF > /etc/systemd/system/titan_nodes.service
 [Unit]
 Description=Titan Nodes Docker Setup
@@ -98,11 +122,13 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/docker-compose up -d
-Restart=always        # Menambahkan opsi restart
-RestartSec=15         # Menentukan waktu penundaan antara restart
+ExecStart=/bin/bash /root/docker.sh
 WorkingDirectory=/root
 StandardOutput=journal
+
+# Restart on failure or reboot after 15 seconds
+Restart=always
+RestartSec=15
 
 [Install]
 WantedBy=multi-user.target
