@@ -25,22 +25,22 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu fo
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# Pull Docker image nezha123/titan-edge (add this line)
-echo -e "\e[1;93mPulling Docker image nezha123/titan-edge...\e[0m"
+# Pull nezha123/titan-edge image
+echo -e "\e[1;93mPulling nezha123/titan-edge image...\e[0m"
 docker pull nezha123/titan-edge
 
 # Install Docker Compose
 echo -e "\e[1;93mInstalling Docker Compose...\e[0m"
-curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+curl -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
 # Move to root directory
 cd /root || exit
 
 # Create fake storage directory and disk image
-echo "Creating fake storage..."
+echo "Creating fake storage for Titan node..."
 mkdir -p /root/fake_storage
-dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0
+dd if=/dev/zero of=/root/fake_storage/storage.img bs=1M seek=10000000 count=0  # 10 TB in MB
 mkfs.ext4 /root/fake_storage/storage.img
 
 # Create Dockerfile for Titan node
@@ -56,9 +56,9 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables (updated to recommended format)
-ENV TITAN_METADATAPATH=/mnt/fake_storage
-ENV TITAN_ASSETSPATHS=/mnt/fake_storage
+# Set environment variables
+ENV TITAN_METADATAPATH /mnt/fake_storage
+ENV TITAN_ASSETSPATHS /mnt/fake_storage
 
 # Copy scripts and configuration files
 COPY start_node.sh /usr/local/bin/start_node.sh
@@ -72,22 +72,17 @@ EOF
 cat <<'EOF' > start_node.sh
 #!/bin/bash
 
-# Download and install Titan
-wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
-tar -zxvf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
-mv titan-l2edge_v0.1.19_patch_linux_amd64 /usr/local/titan
-
 # Set environment variables
-export PATH=$PATH:/usr/local/titan
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
 
 # Start Titan daemon
-titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0
+/usr/local/titan/titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0
 
 # Bind all nodes with the same hash value
 HASH_VALUE="64D57164-87A0-4B01-BE38-9D6DD62555F0"
-for ((i=1; i<=5; i++)); do
-    titan-edge bind --hash=$HASH_VALUE https://api-test1.container1.titannet.io/api/v2/device/binding
+for ((i=1; i<=5; i++))
+do
+    /usr/local/titan/titan-edge bind --hash=$HASH_VALUE https://api-test1.container1.titannet.io/api/v2/device/binding
 done
 
 # Additional configurations or commands as needed
@@ -100,13 +95,10 @@ chmod +x start_node.sh
 cat <<'EOF' > docker-compose.yml
 version: '3'
 services:
-EOF
-
-# Append service for Titan node to docker-compose.yml
-cat <<EOF >> docker-compose.yml
-  titan_node1:
-    image: nezha123/titan-edge
-    container_name: titan_node1
+  titan_node:
+    build:
+      context: .
+    container_name: titan_node
     volumes:
       - node_storage:/mnt/fake_storage
     restart: always
@@ -124,7 +116,7 @@ EOF
 echo -e "\e[1;93mConfiguration completed.\e[0m"
 echo "Starting Titan node..."
 
-# Build and start Docker container
+# Build and start the Docker container
 /usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 
 # Wait for node to start
@@ -136,14 +128,14 @@ sleep 30
 # Create systemd service to run docker-compose on boot
 cat <<EOF > /etc/systemd/system/titan_node.service
 [Unit]
-Description=Titan Node Docker Container
+Description=Titan Node Docker Setup
 After=docker.service network-online.target
 Requires=docker.service
 Restart=always
 RestartSec=15
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/local/bin/docker-compose -f /root/docker-compose.yml up -d
 WorkingDirectory=/root
 StandardOutput=journal
