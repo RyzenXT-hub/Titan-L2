@@ -24,6 +24,3 @@ systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/ti
 
 #Contact Telegram : https://t.me/Ryzen_XT 
 
-```
-wget https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh && chmod +x docker.sh && ./docker.sh
-```
