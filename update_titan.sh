@@ -32,21 +32,21 @@ print_success "Done."
 
 # Download and install the patch
 echo -n "Downloading the update package..."
-wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz & show_loading
+wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.20/titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz & show_loading
 print_success "Done."
 
 echo -n "Extracting the update package..."
-sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local & show_loading
-rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz
+sudo tar -xf titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz -C /usr/local & show_loading
+rm titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz
 print_success "Done."
 
 # Move the new installation to the correct location
-if [ -d "/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64" ]; then
-    echo -n "Moving the new installation to the correct location..."
-    sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan & show_loading
+if [ -d "/usr/local/titan-edge_v0.1.20_246b9dd_linux_amd64" ]; then
+    echo -n "Moving installation to the correct location..."
+    sudo mv /usr/local/titan-edge_v0.1.20_246b9dd_linux_amd64 /usr/local/titan & show_loading
     print_success "Done."
 else
-    echo "Error: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist."
+    echo -e "\e[91mError: Directory /usr/local/titan-edge_v0.1.20_246b9dd_linux_amd64 does not exist.\e[0m"
     exit 1
 fi
 
@@ -56,62 +56,18 @@ if [ -f "/usr/local/titan/libgoworkerd.so" ]; then
     sudo cp /usr/local/titan/libgoworkerd.so /usr/lib/libgoworkerd.so & show_loading
     print_success "Done."
 else
-    echo "Error: File /usr/local/titan/libgoworkerd.so does not exist."
+    echo -e "\e[91mError: File /usr/local/titan/libgoworkerd.so does not exist.\e[0m"
     exit 1
 fi
 
-# Add titan to PATH and LD_LIBRARY_PATH in .bash_profile
-echo -n "Adding titan to PATH and LD_LIBRARY_PATH in .bash_profile..."
-content="
-export PATH=\$PATH:/usr/local/titan
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/lib
-"
-
-# Check if the file ~/.bash_profile does not exist, then create a new one, if it already exists, add it
-if [ ! -f ~/.bash_profile ]; then
-  echo "$content" > ~/.bash_profile
-else
-  echo "$content" >> ~/.bash_profile
-fi
-print_success "Done."
-
-# Source the .bash_profile to update the current shell environment
-source ~/.bash_profile
-
-# Run titan-edge daemon in the background
-echo -n "Running the titan-edge daemon..."
-(titan-edge daemon start --init --url https://cassini-locator.titannet.io:5000/rpc/v0 &) &
-daemon_pid=$!
-show_loading
-print_success "Daemon PID: $daemon_pid"
-
-# Wait 15 seconds to ensure that the daemon has started successfully
-sleep 15
-
-# Run titan-edge bind in the background
-echo -n "Running titan-edge bind..."
-(titan-edge bind --hash="$hash_value" https://api-test1.container1.titannet.io/api/v2/device/binding &) &
-bind_pid=$!
-show_loading
-print_success "Bind PID: $bind_pid"
-
-# Wait for the binding process to finish
-wait $bind_pid
-
-# Update systemd
-echo -n "Updating systemd..."
+echo -n "Reloading systemd..."
 sudo systemctl daemon-reload & show_loading
 print_success "Done."
 
-# Restart titand.service
-echo -n "Restarting the titand.service..."
-sudo systemctl restart titand.service & show_loading
+echo -n "Restarting the titan-edge service..."
+sudo systemctl start titand.service & show_loading
 print_success "Done."
 
-# Check the status and show the configuration and info
-echo -n "Checking the service status..."
-sleep 8
-sudo systemctl status titand.service && titan-edge config show && titan-edge info
-
-print_success "########################## UPDATE COMPLETED ##########################"
-
+# Check the status of the titan-edge service
+echo -n "Checking the titan-edge service status..."
+sudo systemctl status titand.service & show_loading
