@@ -67,22 +67,22 @@ sudo apt-get install -y nano
 
 # Download and install the patch package
 echo -e "\e[1;93mDownloading patch package...\e[0m"
-wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.19/titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz > /dev/null 2>&1 &
+wget https://github.com/Titannet-dao/titan-node/releases/download/v0.1.20/titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz > /dev/null 2>&1 &
 download_pid=$!
 show_loading $download_pid
 
-sudo tar -xf titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz -C /usr/local > /dev/null 2>&1 &
+sudo tar -xf titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz -C /usr/local > /dev/null 2>&1 &
 install_pid=$!
 show_loading $install_pid
 
-rm titan-l2edge_v0.1.19_patch_linux_amd64.tar.gz > /dev/null 2>&1
+rm titan-edge_v0.1.20_246b9dd_linux-amd64.tar.gz > /dev/null 2>&1
 
 # Rename the extracted directory correctly
-if [ -d "/usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64" ]; then
+if [ -d "/usr/local/titan-edge_v0.1.20_246b9dd_linux-amd64" ]; then
     echo -e "\e[1;93mMoving installation to the correct location...\e[0m"
-    sudo mv /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 /usr/local/titan
+    sudo mv /usr/local/titan-edge_v0.1.20_246b9dd_linux-amd64 /usr/local/titan
 else
-    echo -e "\e[91mError: Directory /usr/local/titan-edge_v0.1.19_89e53b6_linux_amd64 does not exist.\e[0m"
+    echo -e "\e[91mError: Directory /usr/local/titan-edge_v0.1.20_246b9dd_linux-amd64 does not exist.\e[0m"
     exit 1
 fi
 
