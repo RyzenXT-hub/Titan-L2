@@ -22,7 +22,7 @@ fi
 # Menghentikan dan menghapus semua kontainer
 for container_id in $containers
 do
-    echo "Menghapus kontainer dengan ID $container_id..."
+    echo "Menghentikan dan menghapus kontainer dengan ID $container_id..."
     docker stop $container_id
     docker rm $container_id
 done
