@@ -7,8 +7,12 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+echo "Mencari kontainer dengan nama 'titan'..."
+
 # Mendapatkan daftar kontainer dengan nama yang sesuai
 containers=$(docker ps -a --filter "name=titan" --format "{{.ID}}")
+
+echo "Kontainer ditemukan: $containers"
 
 if [ -z "$containers" ]; then
     echo "Tidak ada kontainer yang ditemukan untuk dihapus."
