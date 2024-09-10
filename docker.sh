@@ -2,8 +2,9 @@
 
 # Memeriksa apakah skrip dijalankan sebagai pengguna root
 if [ "$(id -u)" != "0" ]; then
-    echo "Skrip ini harus dijalankan dengan hak akses pengguna root."
-    echo "Cobalah menggunakan perintah 'sudo -i' untuk masuk sebagai root, lalu jalankan skrip ini lagi."
+    echo "Skrip ini memerlukan hak akses root."
+    echo "Masuk ke mode root menggunakan 'sudo -i', lalu jalankan skrip lagi."
+    exec sudo -i
     exit 1
 fi
 
