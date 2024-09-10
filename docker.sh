@@ -69,7 +69,7 @@ for ip in $public_ips; do
         docker exec $container_id bash -c "\
             sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
             sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml && \
-            echo 'Storage for node titan_${ip}_${i} set to $storage_gb GB, RPC port set to $current_port'"
+            echo 'Storage for node titan_${ip}_${i} set to $storage_gb GB, Port set to $current_port'"
 
         # Restart the container for the settings to take effect
         docker restart $container_id
