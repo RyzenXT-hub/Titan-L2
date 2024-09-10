@@ -12,7 +12,7 @@ id="3EDB66D2-FC98-4D51-85CC-F9042F36721C"
 
 # Penyimpanan dan port
 storage_gb=50
-start_rpc_port=40000
+start_rpc_port=30000
 container_count=5
 
 # Mendapatkan daftar IP publik
@@ -35,7 +35,7 @@ else
 fi
 
 # Menarik image Docker
-docker pull nezha123/titan-edge:1.7
+docker pull nezha123/titan-edge
 
 # Mengatur node pada setiap IP publik
 current_port=$start_rpc_port
@@ -51,7 +51,7 @@ for ip in $public_ips; do
         mkdir -p "$storage_path"
 
         # Menjalankan kontainer dengan kebijakan restart selalu
-        container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge:1.7)
+        container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge)
 
         echo "Node titan_${ip}_${i} telah berjalan dengan ID kontainer $container_id"
 
