@@ -7,24 +7,24 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# Fungsi untuk mendeteksi semua IP yang terpasang pada instance
-function detect_ips() {
-    echo "Mendeteksi IP yang terpasang pada instance..."
-    # Mendapatkan semua alamat IP kecuali 127.0.0.1
-    IPs=($(ip -o -4 addr show | awk '{print $4}' | cut -d/ -f1 | grep -v '127.0.0.1'))
+# Fungsi untuk mendeteksi IP publik
+function detect_public_ips() {
+    echo "Mendeteksi IP publik..."
+    # Mendapatkan semua alamat IP dan menyaring IP lokal
+    IPs=($(ip -o -4 addr show | awk '{print $4}' | cut -d/ -f1 | grep -v '^127.0.0.1$' | grep -v '^172\.17\.' | grep -v '^10\.' | grep -v '^192\.168\.'))
 
-    # Memeriksa apakah ada IP yang terdeteksi
+    # Memeriksa apakah ada IP publik yang terdeteksi
     if [ ${#IPs[@]} -eq 0 ]; then
-        echo "Tidak ada IP yang terdeteksi."
+        echo "Tidak ada IP publik yang terdeteksi."
         exit 1
     else
-        echo "IP yang terdeteksi: ${IPs[@]}"
+        echo "IP publik yang terdeteksi: ${IPs[@]}"
     fi
 }
 
-# Fungsi untuk menjalankan node pada setiap IP
-function run_nodes_on_ip() {
-    detect_ips
+# Fungsi untuk menjalankan node pada setiap IP publik
+function run_nodes_on_public_ip() {
+    detect_public_ips
 
     # Konfigurasi default
     id="D4A7BCA5-D6E4-4788-9690-27C4C0FDEF97"
@@ -44,20 +44,20 @@ function run_nodes_on_ip() {
     # Menarik image Docker
     docker pull nezha123/titan-edge:1.7
 
-    # Membuat node pada setiap IP
+    # Membuat node pada setiap IP publik
     for ip in "${IPs[@]}"; do
         echo "Menjalankan 5 node pada IP $ip"
         for i in {1..5}; do
             current_rpc_port=$((start_rpc_port + i - 1))
-            
-            # Menggunakan jalur penyimpanan berbeda untuk setiap node
-            storage_path="/root/titan${i}"
+
+            # Menggunakan jalur penyimpanan default
+            storage_path="/root/titan$i"
 
             # Memastikan jalur penyimpanan ada
             mkdir -p "$storage_path"
 
-            # Menjalankan kontainer pada IP tertentu
-            container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_$i" --net=host nezha123/titan-edge:1.7)
+            # Menjalankan kontainer pada IP publik tertentu
+            container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_$i" --net=host --add-host="titan_$i:$ip" nezha123/titan-edge:1.7)
 
             echo "Node titan_$i pada IP $ip telah berjalan dengan ID kontainer $container_id menggunakan port $current_rpc_port dan penyimpanan di $storage_path"
 
@@ -75,12 +75,13 @@ function run_nodes_on_ip() {
             # Bind node dengan kode identitas
             docker exec $container_id bash -c "\
                 titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
-            echo "Node titan_$i di IP $ip telah di-bind dan berjalan di port $current_rpc_port dengan penyimpanan di $storage_path."
+            echo "Node titan_$i di IP $ip telah di-bind."
+
         done
     done
 
-    echo "============================== Semua node telah diatur dan dijalankan pada IP yang terdeteksi ================================"
+    echo "============================== Semua node telah diatur dan dijalankan pada IP publik yang terdeteksi ================================"
 }
 
-# Menjalankan node pada semua IP yang terdeteksi
-run_nodes_on_ip
+# Menjalankan node pada semua IP publik yang terdeteksi
+run_nodes_on_public_ip
