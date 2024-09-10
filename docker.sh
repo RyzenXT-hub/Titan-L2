@@ -3,7 +3,6 @@
 # Memeriksa apakah skrip dijalankan sebagai pengguna root
 if [ "$(id -u)" != "0" ]; then
     echo "Skrip ini harus dijalankan dengan hak akses pengguna root."
-    echo "Cobalah menggunakan perintah 'sudo -i' untuk masuk sebagai root, lalu jalankan skrip ini lagi."
     exit 1
 fi
 
@@ -51,7 +50,7 @@ function run_nodes_on_public_ip() {
         mkdir -p "$storage_path"
 
         # Menjalankan kontainer pada IP publik tertentu
-        container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${PUBLIC_IP}_$i" --net=host --add-host="titan_$i:$PUBLIC_IP" nezha123/titan-edge:1.7)
+        container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${PUBLIC_IP}_$i" --net=host nezha123/titan-edge:1.7)
 
         echo "Node titan_$i pada IP $PUBLIC_IP telah berjalan dengan ID kontainer $container_id menggunakan port $current_rpc_port dan penyimpanan di $storage_path"
 
