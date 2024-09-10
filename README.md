@@ -21,7 +21,7 @@ curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh &&
 ```
 UNINSTALL DOCKER (TEST)
 ```
-apt-get remove --purge -y docker-buildx-plugin docker.io && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/docker /etc/docker /root/titan_storage_*
+systemctl stop docker && systemctl disable docker && apt-get remove --purge -y docker-buildx-plugin docker.io && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/docker /etc/docker /root/titan_storage_*
 ```
 #What's New : 
 - Improved Error Handling
