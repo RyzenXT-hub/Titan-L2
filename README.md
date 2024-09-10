@@ -19,7 +19,7 @@ systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/ti
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh && chmod u+x docker.sh && ./docker.sh
 ```
-UNINSTALL DOCKER (TEST)
+- UNINSTALL DOCKER (TEST)
 ```
 systemctl stop docker && systemctl disable docker && apt-get remove --purge -y docker-buildx-plugin docker.io && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/docker /etc/docker /root/titan_storage_*
 ```
