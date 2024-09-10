@@ -1,64 +1,71 @@
 #!/bin/bash
 
+# Function to display colored text
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 # Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
-    echo "This script requires root access."
-    echo "Switch to root mode using 'sudo -i', then run the script again."
+    echo -e "${YELLOW}This script requires root access.${NC}"
+    echo -e "${YELLOW}Please enter root mode using 'sudo -i', then rerun this script.${NC}"
     exec sudo -i
     exit 1
 fi
 
-# Prompt the user to enter the identity ID
-read -p "Enter your identity code: " id
+# Prompt the user to enter the identity code
+echo -e "${YELLOW}Please enter your identity code:${NC}"
+read -p "> " id
 
 # Storage and port settings
 storage_gb=50
 start_rpc_port=1235
 container_count=5
 
-# Retrieve the list of public IPs
+# Get the list of public IPs
 public_ips=$(curl -s ifconfig.me)
 
 if [ -z "$public_ips" ]; then
-    echo "No public IP detected."
+    echo -e "${YELLOW}No public IP detected.${NC}"
     exit 1
 fi
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
 then
-    echo "Docker not detected, installing..."
+    echo -e "${GREEN}Docker not detected, installing...${NC}"
     apt-get update
     apt-get install ca-certificates curl gnupg lsb-release -y
     apt-get install docker.io -y
 else
-    echo "Docker is already installed."
+    echo -e "${GREEN}Docker is already installed.${NC}"
 fi
 
 # Pull the Docker image
+echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
 # Set up nodes for each public IP
 current_port=$start_rpc_port
 
 for ip in $public_ips; do
-    echo "Setting up node for IP $ip"
+    echo -e "${GREEN}Setting up node for IP $ip${NC}"
 
     for ((i=1; i<=container_count; i++))
     do
         storage_path="/root/titan_storage_${ip}_${i}"
 
-        # Ensure the storage path exists
+        # Ensure storage path exists
         mkdir -p "$storage_path"
 
-        # Run the container with the 'always' restart policy
+        # Run the container with restart always policy
         container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge)
 
-        echo "Node titan_${ip}_${i} is running with container ID $container_id"
+        echo -e "${GREEN}Node titan_${ip}_${i} is running with container ID $container_id${NC}"
 
         sleep 30
 
-        # Modify the config.toml file on the host to set the StorageGB and port values
+        # Modify the config.toml file to set StorageGB and RPC port
         docker exec $container_id bash -c "\
             sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
             sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml && \
@@ -67,13 +74,13 @@ for ip in $public_ips; do
         # Restart the container for the settings to take effect
         docker restart $container_id
 
-        # Enter the container and run the bind command
+        # Bind the node
         docker exec $container_id bash -c "\
             titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
-        echo "Node titan_${ip}_${i} has been bound."
+        echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
 
         current_port=$((current_port + 1))
     done
 done
 
-echo "============================== Installation successfully completed ================================"
+echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
