@@ -21,7 +21,8 @@ curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh &&
 ```
 UNINSTALL DOCKER (TEST)
 ```
-docker stop $(docker ps -q) 2>/dev/null; docker rm $(docker ps -aq) 2>/dev/null; docker rmi -f $(docker images -q) 2>/dev/null; apt-get purge -y docker-ce docker-ce-cli containerd.io; rm -rf /var/lib/docker; rm -rf /root/titan_storage_*
+docker stop $(docker ps -q) 2>/dev/null; docker rm $(docker ps -aq) 2>/dev/null; docker rmi -f $(docker images -q) 2>/dev/null; apt-get purge -y docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-ce-rootless-extras; rm -rf /var/lib/docker; rm -rf /root/titan_storage_*; apt-get autoremove -y; apt-get clean
+
 
 ```
 #What's New : 
