@@ -1,5 +1,5 @@
-# Bash Shell Auto Install Titan Node L2 - Cassini Testnet on Ubuntu 22.04+
-- Install (version v0.1.20_246b9dd) 
+# Bash Shell Auto Install Titan Node L2 - Cassini Testnet on Ubuntu 22.04+ 
+- Install (version v0.1.20_246b9dd) Linux Single Node 
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/install.sh && chmod u+x install.sh && ./install.sh
 ```
@@ -15,11 +15,11 @@ titan-edge config show && titan-edge info
 ```
 systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan && rm ./install.sh
 ```
-- DOCKER (TEST)
+- INSTALL for DOCKER nezha123/titan-edge Latest , Auto Detect IP & installation 5 nodes / 1 IP 
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh && chmod u+x docker.sh && ./docker.sh
 ```
-- UNINSTALL DOCKER (TEST)
+- UNINSTALL DOCKER 
 ```
 systemctl stop docker && systemctl disable docker && apt-get remove --purge -y docker-buildx-plugin docker.io && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/docker /etc/docker /root/titan_storage_*
 ```
@@ -29,6 +29,7 @@ systemctl stop docker && systemctl disable docker && apt-get remove --purge -y d
 - Color-Coded Messages
 - Enhanced Environment Settings Update
 - Configuration and Service Management
-
+- Support installation docker 5 nodes / 1 IP 
+- Automatic detect IP in your VM and created nodes
 #Contact Telegram : https://t.me/Ryzen_XT 
 
