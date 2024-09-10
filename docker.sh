@@ -19,7 +19,7 @@ read -p "> " id
 
 # Storage and port settings
 storage_gb=50
-start_rpc_port=1235
+start_port=1235
 container_count=5
 
 # Get the list of public IPs
@@ -46,7 +46,7 @@ echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
 # Set up nodes for each public IP
-current_port=$start_rpc_port
+current_port=$start_port
 
 for ip in $public_ips; do
     echo -e "${GREEN}Setting up node for IP $ip${NC}"
