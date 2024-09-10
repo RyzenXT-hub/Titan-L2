@@ -13,7 +13,7 @@ id="3EDB66D2-FC98-4D51-85CC-F9042F36721C"
 
 # Penyimpanan dan port
 storage_gb=50
-start_rpc_port=1234
+start_rpc_port=1235
 container_count=5
 
 # Mendapatkan daftar IP publik
