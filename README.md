@@ -15,8 +15,13 @@ titan-edge config show && titan-edge info
 ```
 systemctl stop titand.service && rm -rf /root/.titanedge && rm -rf /usr/local/titan && rm ./install.sh
 ```
+- DCOKER (TEST)
 ```
 curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh && chmod u+x docker.sh && ./docker.sh
+```
+UNINSTALL DOCKER (TEST)
+```
+curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/undocker.sh && chmod u+x undocker.sh && ./undocker.sh
 ```
 #What's New : 
 - Improved Error Handling
