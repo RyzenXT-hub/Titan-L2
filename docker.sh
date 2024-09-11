@@ -17,18 +17,31 @@ fi
 echo -e "${YELLOW}Please enter your identity code:${NC}"
 read -p "> " id
 
+# Prompt the user to confirm if they have more than one IP
+while true; do
+    echo -e "${YELLOW}Do you have more than one public IP? (yes/no):${NC}"
+    read -p "> " answer
+    case $answer in
+        yes)
+            echo -e "${YELLOW}Please enter your public IPs, separated by spaces:${NC}"
+            read -p "> " -a public_ips
+            break
+            ;;
+        no)
+            # Automatically detect the public IP
+            public_ips=($(curl -s ifconfig.me))
+            break
+            ;;
+        *)
+            echo -e "${YELLOW}Invalid input. Please answer with 'yes' or 'no'.${NC}"
+            ;;
+    esac
+done
+
 # Storage and port settings
 storage_gb=50
 start_port=1235
 container_count=5
-
-# Get the list of public IPs
-public_ips=$(curl -s ifconfig.me)
-
-if [ -z "$public_ips" ]; then
-    echo -e "${YELLOW}No public IP detected.${NC}"
-    exit 1
-fi
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
@@ -48,7 +61,7 @@ docker pull nezha123/titan-edge
 # Set up nodes for each public IP
 current_port=$start_port
 
-for ip in $public_ips; do
+for ip in "${public_ips[@]}"; do
     echo -e "${GREEN}Setting up node for IP $ip${NC}"
 
     for ((i=1; i<=container_count; i++))
