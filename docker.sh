@@ -79,7 +79,7 @@ for ip in "${public_ips[@]}"; do
 
         echo -e "${GREEN}Node titan_${ip}_${i} is running with container ID $container_id${NC}"
 
-        sleep 30
+        sleep 15
 
         # Modify the config.toml file to set StorageGB and RPC port
         docker exec $container_id bash -c "\
