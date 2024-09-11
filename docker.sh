@@ -29,7 +29,9 @@ while true; do
             ;;
         no)
             # Automatically detect the public IP
-            public_ips=($(curl -s ifconfig.me))
+            detected_ip=$(curl -s ifconfig.me)
+            echo -e "${YELLOW}Detected IP: $detected_ip${NC}"
+            public_ips=("$detected_ip")
             break
             ;;
         *)
@@ -58,9 +60,10 @@ fi
 echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
-# Set up nodes for each public IP
-current_port=$start_port
+# Initialize port offset
+port_offset=0
 
+# Set up nodes for each public IP
 for ip in "${public_ips[@]}"; do
     echo -e "${GREEN}Setting up node for IP $ip${NC}"
 
@@ -70,6 +73,9 @@ for ip in "${public_ips[@]}"; do
 
         # Ensure storage path exists
         mkdir -p "$storage_path"
+
+        # Calculate the port number for this node
+        current_port=$((start_port + port_offset + (i - 1)))
 
         # Run the container with restart always policy
         container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge)
@@ -88,12 +94,17 @@ for ip in "${public_ips[@]}"; do
         docker restart $container_id
 
         # Bind the node
+        echo -e "${YELLOW}Binding node titan_${ip}_${i}...${NC}"
         docker exec $container_id bash -c "\
             titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
         echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
 
-        current_port=$((current_port + 1))
+        # Debug: Print container status
+        docker inspect $container_id | grep -i state
     done
+
+    # Update port offset for next IP
+    port_offset=$((port_offset + container_count))
 done
 
 echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
