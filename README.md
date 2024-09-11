@@ -21,7 +21,7 @@ curl -O https://raw.githubusercontent.com/RyzenXT-hub/Titan-L2/main/docker.sh &&
 ```
 - UNINSTALL DOCKER 
 ```
-systemctl stop docker && systemctl disable docker && apt-get remove --purge -y docker-buildx-plugin docker.io && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/docker /etc/docker /root/titan_storage_*
+systemctl stop docker docker.socket && systemctl disable docker docker.socket && apt-get remove --purge -y docker.io && rm -rf /root/titan_storage_*  /usr/bin/docker /usr/local/bin/docker /usr/bin/dockerd /var/lib/docker /etc/docker && deluser docker && delgroup docker && apt-get autoremove -y && apt-get clean 
 ```
 #What's New : 
 - Improved Error Handling
