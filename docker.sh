@@ -60,8 +60,8 @@ fi
 echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
-# Initialize port offset
-port_offset=0
+# Initialize the starting port
+current_port=$start_port
 
 # Set up nodes for each public IP
 for ip in "${public_ips[@]}"; do
@@ -73,9 +73,6 @@ for ip in "${public_ips[@]}"; do
 
         # Ensure storage path exists
         mkdir -p "$storage_path"
-
-        # Calculate the port number for this node
-        current_port=$((start_port + port_offset + (i - 1)))
 
         # Run the container with restart always policy
         container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge)
@@ -99,12 +96,14 @@ for ip in "${public_ips[@]}"; do
             titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
         echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
 
-        # Debug: Print container status
-        docker inspect $container_id | grep -i state
+        # Increment the port for the next node
+        current_port=$((current_port + 1))
+
     done
 
-    # Update port offset for next IP
-    port_offset=$((port_offset + container_count))
+    # Update the starting port for the next IP
+    # Ensure the new starting port is greater than the highest port used so far
+    current_port=$((current_port + (container_count - 1)))
 done
 
 echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
