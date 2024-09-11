@@ -44,6 +44,7 @@ done
 storage_gb=50
 start_port=1235
 container_count=5
+port_increment=5
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
@@ -79,9 +80,9 @@ for ip in "${public_ips[@]}"; do
 
         echo -e "${GREEN}Node titan_${ip}_${i} is running with container ID $container_id${NC}"
 
-        sleep 15
+        sleep 10
 
-        # Modify the config.toml file to set StorageGB and RPC port
+        # Modify the config.toml file to set StorageGB and RPC port, avoiding port 1234
         docker exec $container_id bash -c "\
             sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
             sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml && \
@@ -96,14 +97,15 @@ for ip in "${public_ips[@]}"; do
             titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
         echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
 
-        # Increment the port for the next node
+        # Increment the port for the next node, skip port 1234
         current_port=$((current_port + 1))
-
+        if [ "$current_port" -eq 1234 ]; then
+            current_port=$((current_port + 1))
+        fi
     done
 
     # Update the starting port for the next IP
-    # Ensure the new starting port is greater than the highest port used so far
-    current_port=$((current_port + (container_count - 1)))
+    current_port=$((current_port + port_increment - 1))
 done
 
 echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
