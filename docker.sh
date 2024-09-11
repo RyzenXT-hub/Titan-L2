@@ -17,34 +17,18 @@ fi
 echo -e "${YELLOW}Please enter your identity code:${NC}"
 read -p "> " id
 
-# Prompt the user to confirm if they have more than one IP
-while true; do
-    echo -e "${YELLOW}Do you have more than one public IP? (yes/no):${NC}"
-    read -p "> " answer
-    case $answer in
-        yes)
-            echo -e "${YELLOW}Please enter your public IPs, separated by spaces:${NC}"
-            read -p "> " -a public_ips
-            break
-            ;;
-        no)
-            # Automatically detect the public IP
-            detected_ip=$(curl -s ifconfig.me)
-            echo -e "${YELLOW}Detected IP: $detected_ip${NC}"
-            public_ips=("$detected_ip")
-            break
-            ;;
-        *)
-            echo -e "${YELLOW}Invalid input. Please answer with 'yes' or 'no'.${NC}"
-            ;;
-    esac
-done
-
 # Storage and port settings
 storage_gb=50
 start_port=1235
 container_count=5
-port_increment=5
+
+# Get the list of public IPs
+public_ips=$(curl -s ifconfig.me)
+
+if [ -z "$public_ips" ]; then
+    echo -e "${YELLOW}No public IP detected.${NC}"
+    exit 1
+fi
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
@@ -61,11 +45,10 @@ fi
 echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
-# Initialize the starting port
+# Set up nodes for each public IP
 current_port=$start_port
 
-# Set up nodes for each public IP
-for ip in "${public_ips[@]}"; do
+for ip in $public_ips; do
     echo -e "${GREEN}Setting up node for IP $ip${NC}"
 
     for ((i=1; i<=container_count; i++))
@@ -80,9 +63,9 @@ for ip in "${public_ips[@]}"; do
 
         echo -e "${GREEN}Node titan_${ip}_${i} is running with container ID $container_id${NC}"
 
-        sleep 10
+        sleep 30
 
-        # Modify the config.toml file to set StorageGB and RPC port, avoiding port 1234
+        # Modify the config.toml file to set StorageGB and RPC port
         docker exec $container_id bash -c "\
             sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
             sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml && \
@@ -92,20 +75,12 @@ for ip in "${public_ips[@]}"; do
         docker restart $container_id
 
         # Bind the node
-        echo -e "${YELLOW}Binding node titan_${ip}_${i}...${NC}"
         docker exec $container_id bash -c "\
             titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
         echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
 
-        # Increment the port for the next node, skip port 1234
         current_port=$((current_port + 1))
-        if [ "$current_port" -eq 1234 ]; then
-            current_port=$((current_port + 1))
-        fi
     done
-
-    # Update the starting port for the next IP
-    current_port=$((current_port + port_increment - 1))
 done
 
 echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
