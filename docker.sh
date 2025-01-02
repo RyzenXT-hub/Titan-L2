@@ -16,7 +16,17 @@ read -p "> " id
 
 storage_gb=50
 start_port=1235
-container_count=5
+
+# Interaksi untuk memilih jumlah node
+while true; do
+    read -p "Enter the number of nodes to create (max 5, default 5): " container_count
+    container_count=${container_count:-5}
+    if [[ "$container_count" -ge 1 && "$container_count" -le 5 ]]; then
+        break
+    else
+        echo -e "${YELLOW}Please enter a valid number between 1 and 5.${NC}"
+    fi
+done
 
 public_ips=$(curl -s ifconfig.me)
 
@@ -41,7 +51,7 @@ docker pull nezha123/titan-edge
 current_port=$start_port
 
 for ip in $public_ips; do
-    echo -e "${GREEN}Setting up node for IP $ip${NC}"
+    echo -e "${GREEN}Setting up nodes for IP $ip${NC}"
 
     for ((i=1; i<=container_count; i++))
     do
