@@ -31,5 +31,6 @@ systemctl stop docker docker.socket && systemctl disable docker docker.socket &&
 - Configuration and Service Management
 - Support installation docker 5 nodes / 1 IP 
 - Automatic detect IP in your VM and created nodes
+- Add custom node , now user can choose how many node they running 
 #Contact Telegram : https://t.me/Ryzen_XT 
 
