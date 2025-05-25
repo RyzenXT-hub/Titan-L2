@@ -1,25 +1,31 @@
 #!/bin/bash
 
+set -euo pipefail
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Fungsi untuk mengganti ':' jadi '-' agar path Docker valid (IPv6 fix)
+sanitize_ip() {
+    echo "$1" | sed 's/:/-/g'
+}
+
 if [ "$(id -u)" != "0" ]; then
     echo -e "${YELLOW}This script requires root access.${NC}"
     echo -e "${YELLOW}Please enter root mode using 'sudo -i', then rerun this script.${NC}"
-    exec sudo -i
     exit 1
 fi
 
 echo -e "${YELLOW}Please enter your identity code:${NC}"
-read -p "> " id
+read -rp "> " id
 
 storage_gb=50
 start_port=1235
 
-# Interaksi untuk memilih jumlah node
+# Pilih jumlah node
 while true; do
-    read -p "Enter the number of nodes to create (max 5, default 5): " container_count
+    read -rp "Enter the number of nodes to create (max 5, default 5): " container_count
     container_count=${container_count:-5}
     if [[ "$container_count" -ge 1 && "$container_count" -le 5 ]]; then
         break
@@ -28,19 +34,19 @@ while true; do
     fi
 done
 
-public_ips=$(curl -s ifconfig.me)
+# Ambil IP publik
+public_ip=$(curl -s ifconfig.me)
 
-if [ -z "$public_ips" ]; then
+if [ -z "$public_ip" ]; then
     echo -e "${YELLOW}No public IP detected.${NC}"
     exit 1
 fi
 
-if ! command -v docker &> /dev/null
-then
+# Cek dan install Docker jika belum ada
+if ! command -v docker &> /dev/null; then
     echo -e "${GREEN}Docker not detected, installing...${NC}"
     apt-get update
-    apt-get install ca-certificates curl gnupg lsb-release -y
-    apt-get install docker.io -y
+    apt-get install -y ca-certificates curl gnupg lsb-release docker.io
 else
     echo -e "${GREEN}Docker is already installed.${NC}"
 fi
@@ -49,35 +55,42 @@ echo -e "${GREEN}Pulling the Docker image nezha123/titan-edge...${NC}"
 docker pull nezha123/titan-edge
 
 current_port=$start_port
+safe_ip=$(sanitize_ip "$public_ip")
 
-for ip in $public_ips; do
-    echo -e "${GREEN}Setting up nodes for IP $ip${NC}"
+for ((i=1; i<=container_count; i++)); do
+    storage_path="/root/titan_storage_${safe_ip}_${i}"
+    container_name="titan_${safe_ip}_${i}"
 
-    for ((i=1; i<=container_count; i++))
-    do
-        storage_path="/root/titan_storage_${ip}_${i}"
+    echo -e "${GREEN}Setting up node $container_name${NC}"
 
-        mkdir -p "$storage_path"
+    # Skip jika container sudah ada
+    if docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
+        echo -e "${YELLOW}Container $container_name already exists. Skipping...${NC}"
+        continue
+    fi
 
-        container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan_${ip}_${i}" --net=host nezha123/titan-edge)
+    mkdir -p "$storage_path"
 
-        echo -e "${GREEN}Node titan_${ip}_${i} is running with container ID $container_id${NC}"
+    container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "$container_name" --net=host nezha123/titan-edge)
 
-        sleep 30
+    echo -e "${GREEN}Node $container_name is running with container ID $container_id${NC}"
 
-        docker exec $container_id bash -c "\
-            sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
-            sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml && \
-            echo 'Storage for node titan_${ip}_${i} set to $storage_gb GB, Port set to $current_port'"
+    sleep 30
 
-        docker restart $container_id
+    docker exec "$container_id" bash -c "\
+        sed -i 's/^[[:space:]]*#StorageGB = .*/StorageGB = $storage_gb/' /root/.titanedge/config.toml && \
+        sed -i 's/^[[:space:]]*#ListenAddress = \"0.0.0.0:1234\"/ListenAddress = \"0.0.0.0:$current_port\"/' /root/.titanedge/config.toml"
 
-        docker exec $container_id bash -c "\
-            titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"
-        echo -e "${GREEN}Node titan_${ip}_${i} has been bound.${NC}"
+    docker restart "$container_id"
 
-        current_port=$((current_port + 1))
-    done
+    echo -e "${GREEN}Binding node $container_name...${NC}"
+    if docker exec "$container_id" bash -c "titan-edge bind --hash=$id https://api-test1.container1.titannet.io/api/v2/device/binding"; then
+        echo -e "${GREEN}Node $container_name has been successfully bound.${NC}"
+    else
+        echo -e "${YELLOW}Binding failed for $container_name. Please check manually.${NC}"
+    fi
+
+    current_port=$((current_port + 1))
 done
 
 echo -e "${GREEN}============================== All nodes have been set up and are running ===============================${NC}"
