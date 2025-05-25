@@ -4,9 +4,9 @@ set -euo pipefail
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m' 
 
-# Fungsi untuk mengganti ':' jadi '-' agar path Docker valid (IPv6 fix)
+
 sanitize_ip() {
     echo "$1" | sed 's/:/-/g'
 }
@@ -23,7 +23,7 @@ read -rp "> " id
 storage_gb=50
 start_port=1235
 
-# Pilih jumlah node
+
 while true; do
     read -rp "Enter the number of nodes to create (max 5, default 5): " container_count
     container_count=${container_count:-5}
@@ -34,7 +34,7 @@ while true; do
     fi
 done
 
-# Ambil IP publik
+
 public_ip=$(curl -s ifconfig.me)
 
 if [ -z "$public_ip" ]; then
@@ -42,7 +42,7 @@ if [ -z "$public_ip" ]; then
     exit 1
 fi
 
-# Cek dan install Docker jika belum ada
+
 if ! command -v docker &> /dev/null; then
     echo -e "${GREEN}Docker not detected, installing...${NC}"
     apt-get update
@@ -63,7 +63,7 @@ for ((i=1; i<=container_count; i++)); do
 
     echo -e "${GREEN}Setting up node $container_name${NC}"
 
-    # Skip jika container sudah ada
+    
     if docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
         echo -e "${YELLOW}Container $container_name already exists. Skipping...${NC}"
         continue
